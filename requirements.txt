@@ -1,0 +1,10 @@
+rpyc
+numpy
+scipy
+cflib
+cvxopt
+xarray
+shapely
+PySide6
+rasterio
+matplotlib
