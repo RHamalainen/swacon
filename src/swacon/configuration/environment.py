@@ -1,0 +1,40 @@
+"""Read-only configuration values for environment
+"""
+
+import math
+
+import shapely as sh
+
+# TODO: units are missing...
+
+# Physical coordinates (meter)
+LABORATORY_PHYSICAL_RECTANGLE = sh.Polygon(
+    [
+        (-1.0, -1.0),
+        (1.0, -1.0),
+        (1.0, 1.0),
+        (-1.0, 1.0),
+    ]
+)
+LABORATORY_PHYSICAL_RECTANGLE_WIDTH = 2.0
+LABORATORY_PHYSICAL_RECTANGLE_HEIGHT = 2.0
+
+TILES_PER_METER = 50
+METERS_PER_TILE = 1 / TILES_PER_METER
+TILES_IN_PHYSICAL_X = math.ceil(TILES_PER_METER * LABORATORY_PHYSICAL_RECTANGLE_WIDTH)
+TILES_IN_PHYSICAL_Y = math.ceil(TILES_PER_METER * LABORATORY_PHYSICAL_RECTANGLE_HEIGHT)
+TILE_PHYSICAL_WIDTH = LABORATORY_PHYSICAL_RECTANGLE_WIDTH / TILES_IN_PHYSICAL_X
+TILE_PHYSICAL_HEIGHT = LABORATORY_PHYSICAL_RECTANGLE_HEIGHT / TILES_IN_PHYSICAL_Y
+
+# TODO: solve from input
+LABORATORY_RASTER_RECTANGLE = sh.Polygon(
+    [
+        (0, 0),
+        (100, 0),
+        (100, 100),
+        (0, 100),
+    ]
+)
+
+PIXELS_PER_TILE = 10
+TILES_PER_PIXEL = 1 / PIXELS_PER_TILE
