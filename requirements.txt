@@ -4,6 +4,7 @@ scipy
 cflib
 cvxopt
 xarray
+pytest
 shapely
 PySide6
 rasterio
