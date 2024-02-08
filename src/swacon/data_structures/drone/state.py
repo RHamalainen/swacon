@@ -1,0 +1,2 @@
+class DroneState:
+    pass
