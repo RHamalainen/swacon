@@ -9,3 +9,4 @@ shapely
 PySide6
 rasterio
 matplotlib
+motioncapture
