@@ -1,0 +1,12 @@
+[project]
+name = "swacon"
+version = "0.0.1"
+requires-python = ">= 3.11"
+authors = [{ name = "Roni Hämäläinen", email = "roni.hamalainen@tuni.fi" }]
+maintainers = [{ name = "Roni Hämäläinen", email = "roni.hamalainen@tuni.fi" }]
+description = ""
+readme = "README.md"
+license = { file = "LICENSE" }
+
+[project.urls]
+Repository = "https://github.com/RHamalainen/swacon"
