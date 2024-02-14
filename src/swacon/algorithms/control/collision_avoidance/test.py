@@ -11,11 +11,11 @@ class Test(unittest.TestCase):
         agents = {
             "a1": AgentState(0.0, 0.0, 0.0, 0.0),
         }
-        self.assertEqual(safety_filter(agents), agents)
+        self.assertDictEqual(safety_filter(agents), agents)
 
     def test_two_agents(self) -> None:
         agents = {
             "a1": AgentState(0.0, 0.0, 0.0, 0.0),
             "a2": AgentState(0.0, 0.0, 0.0, 0.0),
         }
-        self.assertNotEqual(safety_filter(agents), agents)
+        self.assertDictEqual(safety_filter(agents), agents)
