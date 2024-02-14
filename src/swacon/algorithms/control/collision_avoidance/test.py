@@ -1,6 +1,6 @@
 import unittest
 
-from swacon.algorithms.control.collision_avoidance.safety_filter import AgentState, solve_collision_neighbors, solve_new_state, safety_filter
+from swacon.algorithms.control.collision_avoidance.safety_filter import AgentState, solve_collision_neighbors, solve_new_state, safety_filter  # noqa: F401
 
 
 class Test(unittest.TestCase):
