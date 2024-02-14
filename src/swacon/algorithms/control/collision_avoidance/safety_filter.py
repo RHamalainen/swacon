@@ -1,5 +1,5 @@
 import traceback
-from typing import Dict, List
+from typing import Dict, List, Any
 
 import cvxopt
 import numpy as np
@@ -22,6 +22,19 @@ class AgentState:
         self.y = y
         self.vx = vx
         self.vy = vy
+
+    def __eq__(self, other: Any) -> bool:
+        if not isinstance(other, AgentState):
+            return False
+        if self.x != other.x:
+            return False
+        if self.y != other.y:
+            return False
+        if self.vx != other.vx:
+            return False
+        if self.vy != other.vy:
+            return False
+        return True
 
 
 # TODO: documentation
