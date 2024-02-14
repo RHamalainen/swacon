@@ -16,7 +16,7 @@ from swacon.data_structures.drone.state import DroneState
 EPSILON = 0.0001
 
 
-def solve_central_mass_point(
+def solve_central_mass_point(  # noqa: C901
     name: str, drone_states: Dict[str, DroneState], environment: xarray.DataArray, envelope: sh.Polygon, tiles_in_physical_x: int, tiles_in_physical_y: int
 ) -> Optional[Tuple[float, float]]:
     """Solve central mass point for a drone in given environment
