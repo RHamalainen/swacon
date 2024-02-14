@@ -74,7 +74,7 @@ def solve_new_state(
         if agent.vx != 0.0 and agent.vy != 0.0:
             if new_avx == 0.0 and new_avy == 0.0:
                 print(f"[{agent_name}] deadlocked")
-    except Exception as e:
+    except Exception:
         # If the optimization problem does not have a solution, then stop the agent
         print(f"[{agent_name}] QP solver failed with U=0")
         traceback.print_exc()
