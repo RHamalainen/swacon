@@ -1,6 +1,5 @@
 import pickle
-from pathlib import Path
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Tuple
 
 import xarray as xr
 import matplotlib.pyplot as plt
@@ -21,18 +20,19 @@ def find_most_recent_environment() -> Optional[xr.DataArray]:
 
 
 # TODO: use better return type
-def find_most_recent_flight_data() -> Optional[dict]:
+def find_most_recent_flight_data() -> Optional[Dict[str, List[Tuple[str, Optional[DroneState]]]]]:
     most_recent_path = find_newest_file("*.pickle", constants.PATH_OUTPUT_FLIGHT_DATA_FOLDER)
     if most_recent_path is None:
         return None
     with most_recent_path.open("r+b") as stream:
         data = pickle.load(stream)
+    assert isinstance(data, dict)
     return data
 
 
 # TODO: create new plot for new environments
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # noqa: C901
     environment = find_most_recent_environment()
     if environment is None:
         print(f"failed to find most recent environment dataset")
@@ -46,8 +46,8 @@ if __name__ == "__main__":
     for i, (name, _record) in enumerate(flight_data.items()):
         print(f" - {i + 1}/{len(flight_data.keys())}: {name}")
     for name, record in flight_data.items():
-        timestamps = list()
-        states = list()
+        timestamps: List[str] = list()
+        states: List[Optional[DroneState]] = list()
         xs: List[Optional[float]] = list()
         ys: List[Optional[float]] = list()
         zs: List[Optional[float]] = list()
