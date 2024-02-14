@@ -1,0 +1,6 @@
+[flake8]
+ignore =
+    # Line too long
+    E501,
+    # F-string is missing placeholders
+    F541
