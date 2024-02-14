@@ -1,13 +1,10 @@
-import sys
 import time
 import pickle
-import logging
 import datetime
 import traceback
 from copy import deepcopy
-from typing import List, Dict, Set, Optional, Tuple
+from typing import List, Dict, Tuple
 from pathlib import Path
-from threading import Lock
 
 import cflib
 import cflib.crtp
@@ -22,6 +19,7 @@ import swacon.spa.constants as constants
 import swacon.spa.environment as environment
 import swacon.spa.localization as localization
 from swacon.algorithms.control.collision_avoidance.safety_filter import safety_filter as safety_filter_unwrapped
+from swacon.algorithms.control.coverage.solve_control import solve_control
 from swacon.data_structures.drone.state import DroneState
 from swacon.spa.localization import MotionCaptureWorker
 from swacon.spa.environment_updater import EnvironmentUpdater
@@ -161,7 +159,7 @@ def reboot_drone(uri: str) -> bool:
     try:
         PowerSwitch(uri).stm_power_cycle()
         return True
-    except Exception as exception:
+    except Exception:
         print(f"failed to reboot drone {name}")
         traceback.print_exc()
         return False
@@ -234,16 +232,16 @@ def loop_iteration(scf: SCF) -> None:
     if drone_state is not None:
         setpoint_x = drone_state.x
         setpoint_y = drone_state.y
-        setpoint_z = drone_state.z
+        # setpoint_z = drone_state.z
         setpoint_vx = drone_state.vx
         setpoint_vy = drone_state.vy
-        setpoint_vz = drone_state.vz
-        setpoint_angle = drone_state.angle
+        # setpoint_vz = drone_state.vz
+        # setpoint_angle = drone_state.angle
 
         if USE_VORONOI_ALGORITHM:
             with environment.ENVIRONMENT_LOCK:
                 current_environment = deepcopy(environment.ENVIRONMENT)
-            result = coverage.solve_control(
+            result = solve_control(
                 name=name,
                 drone_states=drone_states,
                 environment=current_environment,
@@ -306,16 +304,16 @@ def run_sequence(scf: SCF) -> None:
                         time.sleep(0.1)
                 case other:
                     print(f"invalid operation time: {other}")
-        except Exception as exception:
+        except Exception:
             print(f"[{name}] failed sequence")
             traceback.print_exc()
         finally:
             try:
                 land(scf.cf)
-            except Exception as exception:
+            except Exception:
                 print(f"[{name}] failed to land")
                 traceback.print_exc()
-    except Exception as exception:
+    except Exception:
         print(f"[{name}] failed to take off")
         traceback.print_exc()
 
@@ -328,12 +326,12 @@ def record_all_flight_data() -> None:
         with path.open("wb") as stream:
             with localization.DRONE_STATES_TIME_SERIES_LOCK:
                 pickle.dump(localization.DRONE_STATES_TIME_SERIES, stream, protocol=pickle.HIGHEST_PROTOCOL)
-    except Exception as exception:
+    except Exception:
         print(f"failed to record flight data")
         traceback.print_exc()
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # noqa: C901
     # logging.basicConfig(level=logging.DEBUG)
     print(f"settings:")
     print(f" - use voronoi coverage algorithm: {USE_VORONOI_ALGORITHM}")
@@ -376,52 +374,52 @@ if __name__ == "__main__":
                                                     print(f"updated localization, running sequence")
                                                     swarm.parallel_safe(run_sequence)
                                                     print(f"finished sequence")
-                                                except Exception as exception:
+                                                except Exception:
                                                     print(f"failed run sequence")
                                                     traceback.print_exc()
-                                            except Exception as exception:
+                                            except Exception:
                                                 print(f"failed update localization")
                                                 traceback.print_exc()
-                                        except Exception as exception:
+                                        except Exception:
                                             print(f"failed download all parameters")
                                             traceback.print_exc()
                                     print(f"finished script")
-                                except Exception as exception:
+                                except Exception:
                                     print(f"failed to create crazyflie swarm")
                                     traceback.print_exc()
-                            except Exception as exception:
+                            except Exception:
                                 print(f"failed to create crazyflie factory")
                                 traceback.print_exc()
                         else:
                             print(f"failed to reboot all drones")
                     else:
                         print(f"no drones were selected")
-                except Exception as exception:
+                except Exception:
                     print(f"failed to reboot all drones")
                     traceback.print_exc()
             else:
                 print(f"no available interfaces")
-        except Exception as exception:
+        except Exception:
             print(f"failed to initialize cflib drivers")
             traceback.print_exc()
-    except Exception as exception:
+    except Exception:
         print(f"failed to initialize cflib drivers")
         traceback.print_exc()
     finally:
         try:
             environment_updater.close()
             print(f"closed environment updater thread")
-        except Exception as exception:
+        except Exception:
             print(f"failed to close environment updater thread")
             traceback.print_exc()
         try:
             motion_capture_worker.close()
             print(f"closed motion capture thread")
-        except Exception as exception:
+        except Exception:
             print(f"failed to close motion capture thread")
             traceback.print_exc()
         try:
             record_all_flight_data()
-        except Exception as exception:
+        except Exception:
             print(f"failed to record all flight data")
             traceback.print_exc()
