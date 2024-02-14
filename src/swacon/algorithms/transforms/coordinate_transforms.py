@@ -1,4 +1,4 @@
-from typing import Any, List, Dict, Set, Optional, Tuple
+from typing import Tuple
 
 import swacon.configuration.environment as environment
 
@@ -35,8 +35,8 @@ def raster_to_physical(r: Tuple[float, float]) -> Tuple[float, float]:
     assert isinstance(xr, float)
     assert isinstance(yr, float)
     return convert_coordinates(r, 1, -1, -1, 1, 100, 0, 100, 0)
-    xp = xr / TILES_PER_METER
-    yp = yr / TILES_PER_METER
+    xp = xr / environment.TILES_PER_METER
+    yp = yr / environment.TILES_PER_METER
     xp += 1.0
     yp += 1.0
     return xp, yp
@@ -49,6 +49,6 @@ def physical_to_raster(p: Tuple[float, float]) -> Tuple[float, float]:
     return convert_coordinates(p, 100, 0, 100, 0, 1, -1, -1, 1)
     xp += 1.0
     yp += 1.0
-    xr = TILES_PER_METER * xp
-    yr = TILES_PER_METER * yp
+    xr = environment.TILES_PER_METER * xp
+    yr = environment.TILES_PER_METER * yp
     return xr, yr
