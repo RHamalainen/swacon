@@ -6,26 +6,31 @@
 
 import sys
 import time
-from typing import Dict, List, Set, Optional, Tuple
-from queue import Queue
-from threading import Thread, Lock
+import math
 from copy import deepcopy
 from enum import Enum, unique, auto
-import math
+from queue import Queue
+from typing import Dict, List, Optional, Tuple
+from threading import Thread, Lock
 
 import numpy as np
 import xarray as xr
-from scipy.ndimage import gaussian_filter
 import shapely as sh
+import matplotlib.pyplot as plt
+from numpy.ma import make_mask
+from scipy.ndimage import gaussian_filter
 from shapely.ops import voronoi_diagram
 from rasterio.features import rasterize
-from numpy.ma import make_mask
-import matplotlib.pyplot as plt
 
-import PySide6.QtCore as QtCore
-from PySide6.QtCore import QRectF, Slot, QTimer, QPointF, QRect, QMargins, QMarginsF, Qt
-from PySide6.QtGui import QFont, QColor, QCloseEvent, QMouseEvent, QKeyEvent, QPainterPath, QPainter, QWheelEvent
+from PySide6.QtGui import QFont, QColor, QCloseEvent, QMouseEvent, QPainterPath, QPainter, QWheelEvent
+from PySide6.QtCore import QRectF, Slot, QTimer, QPointF, QRect, QMarginsF, Qt
 from PySide6.QtWidgets import QCompleter, QGridLayout, QLineEdit, QGraphicsScene, QGraphicsView, QWidget, QApplication, QGraphicsItem, QGraphicsRectItem, QLabel, QStyleOptionGraphicsItem
+
+# from swacon.mpa.constants import TILES_IN_X, TILES_IN_Y
+
+# TODO: placeholders to fix linter warnings
+TILES_IN_X = 0
+TILES_IN_Y = 0
 
 
 def create_environment(width: int, height: int):
@@ -333,7 +338,7 @@ def solve_central_mass_point(drone: Drone, environment) -> Optional[Tuple[float,
         # TODO: super_polygons[i] = polygon_i
 
 
-def control_thread(drone: Drone):
+def control_thread(drone: Drone):  # noqa: C901
     assert isinstance(drone, Drone)
     print(f"drone {drone.name} control start")
     tolerance = 0.1
