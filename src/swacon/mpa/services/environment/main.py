@@ -5,16 +5,11 @@ Services provided:
  - modify current environment
 """
 
-import sys
-from pathlib import Path
-
 import xarray as xr
 from rpyc import Service, ThreadedServer
 from rpyc.utils.registry import TCPRegistryClient
 
-# Add top level modules to PYTHONPATH
-sys.path.append(str(Path(".").absolute()))
-import services.common.service_configuration
+import swacon.mpa.services.common.service_configuration  # noqa: F401
 
 
 class EnvironmentService(Service):
