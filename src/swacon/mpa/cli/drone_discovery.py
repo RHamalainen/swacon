@@ -2,14 +2,15 @@ import time
 import logging
 import traceback
 from typing import List, Dict
+from argparse import ArgumentParser
 from functools import partial
 from threading import Lock, Event
-from argparse import ArgumentParser
 
 import cflib.crtp
 from cflib.crtp.radiodriver import RadioDriver
 
-import constants
+import swacon.mpa.constants as constants
+
 
 # cflib's logger pollutes our logging... シ
 LOGGER = logging.getLogger("DIS")
@@ -43,7 +44,7 @@ def link_error_callback(name: str, error: str) -> None:
         DRONE_NAME_TO_LINK_ERROR_EVENT[name].set()
 
 
-def discover() -> List[str]:
+def discover() -> List[str]:  # noqa: C901
     # Establish links to drones
     drivers: Dict[str, RadioDriver] = dict()
     for name, uri in constants.DRONE_NAME_TO_URI.items():
@@ -54,7 +55,7 @@ def discover() -> List[str]:
             driver.connect(uri, link_quality_cb, link_error_cb)
             drivers[name] = driver
             LOGGER.debug(f"[{name}] connected link")
-        except Exception as exception:
+        except Exception:
             traceback.print_exc()
     # Test that lifetimes of links exceed threshold
     present_drones = list()
@@ -72,13 +73,14 @@ def discover() -> List[str]:
                     for name in failed_links:
                         DRONE_NAME_TO_LINK_ERROR_EVENT.pop(name)
                 else:
-                    do_continue = False
+                    # TODO: maybe early exit?
+                    pass
                 DRONE_NAME_TO_LINK_ERROR_EVENT_LOCK.release()
         with DRONE_NAME_TO_LINK_ERROR_EVENT_LOCK:
             for name, event in DRONE_NAME_TO_LINK_ERROR_EVENT.items():
                 if not event.is_set():
                     present_drones.append(name)
-    except Exception as exception:
+    except Exception:
         traceback.print_exc()
     finally:
         for name, driver in drivers.items():
