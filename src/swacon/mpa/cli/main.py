@@ -6,21 +6,30 @@
 # TODO: study how cachedcffactory works = it might solve slow connection issue
 # TODO: use rpyc decorator instead of _exposed
 
-import os
-import time
 from typing import Optional, Dict, Any
 from logging import Logger, getLogger, DEBUG as LOGGING_LEVEL_DEBUG
 from argparse import ArgumentParser
 
-from rpyc import Service, ThreadedServer
 import rpyc
+from rpyc import Service, ThreadedServer
 from rpyc.core.protocol import Connection
 from rpyc.utils.factory import discover, DiscoveryError, connect
 from rpyc.utils.registry import TCPRegistryClient
 
-from drone_position import DronePosition
-from command import CommandLand, CommandTurn, CommandTakeoff, CommandPositionSetpoint, CommandQuit, CommandReset, CommandState, TurnDirection, PositionSetpointType, Command
-from constants import DRONE_NAME_TO_URI
+from swacon.mpa.constants import DRONE_NAME_TO_URI
+from swacon.data_structures.drone.state import DroneState
+from swacon.data_structures.drone.command import (
+    Command,
+    CommandLand,
+    CommandPositionSetpoint,
+    CommandQuit,
+    CommandReset,
+    CommandState,
+    CommandTakeoff,
+    CommandTurn,
+    PositionSetpointType,
+    TurnDirection,
+)
 
 
 class Application:
@@ -106,7 +115,7 @@ class Application:
         # TODO: maybe also stop_service ?
         try:
             connection.root.stop_service()
-        except EOFError as error:
+        except EOFError:
             # This is expected
             pass
 
@@ -153,7 +162,7 @@ class Application:
                 self.logger.info(f"no positions received")
             else:
                 for i, (name, position) in enumerate(positions.items()):
-                    if isinstance(position, DronePosition):
+                    if isinstance(position, DroneState):
                         x = round(position.x, 4)
                         y = round(position.y, 4)
                         z = round(position.z, 4)
@@ -173,6 +182,9 @@ class Application:
 
     def run(self):
         # self.connect_to_motion_capture_service()
+
+        # TODO: placeholder to fix linter warnings
+        connected_drones = dict()
 
         do_continue = True
         do_print_help = True
@@ -394,7 +406,7 @@ class CliService(Service):
     def exposed_disconnect(self, name: str):
         if name in self.drone_connections.keys():
             # Do not kill the service here, keep it open
-            connection = self.drone_connections.pop(name)
+            connection = self.drone_connections.pop(name)  # noqa: F841
             # connection.root.stop_service()
         else:
             print(f"already disconnected from drone {name}")
