@@ -1,21 +1,15 @@
-import sys
-from pathlib import Path
 from typing import Dict
-import logging
 
-import rpyc
 from rpyc import Service, ThreadedServer
 from rpyc.utils.registry import TCPRegistryClient
 
-# Add top level modules to PYTHONPATH
-sys.path.append(str(Path(".").absolute()))
-from drone_position import DronePosition
-from drone_control import DroneControl
-import services.common.service_configuration
+import swacon.mpa.services.common.service_configuration  # noqa: F401
+from swacon.data_structures.drone.state import DroneState
+from swacon.data_structures.drone.control import DroneControl
 
 
 class ControlService(Service):
-    def solve_controls(self, positions: Dict[str, DronePosition]) -> Dict[str, DroneControl]:
+    def solve_controls(self, positions: Dict[str, DroneState]) -> Dict[str, DroneControl]:
         # TODO
         return dict()
 
