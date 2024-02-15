@@ -1,17 +1,11 @@
-import sys
-from pathlib import Path
 from argparse import ArgumentParser
 
 from rpyc.utils.registry import TCPRegistryClient
 from cflib.crtp import init_drivers as initialize_drone_drivers
 
-# Add top level modules to PYTHONPATH
-sys.path.append(str(Path(".").absolute()))
-import mocap_wrapper_wrapper as mww
-from constants import DRONE_NAME_TO_URI
-import services.common.service_configuration
-from server import DroneServer
-from service import NAME_TO_SERVICE
+from swacon.mpa.constants import DRONE_NAME_TO_URI
+from swacon.mpa.services.drone.server import DroneServer
+from swacon.mpa.services.drone.service import NAME_TO_SERVICE
 
 # TODO
 # if mww.IN_LABORATORY:
