@@ -1,4 +1,4 @@
-from pathlib import Path
+# from pathlib import Path
 
 from rpyc import list_services
 from rpyc.utils.factory import discover, DiscoveryError
@@ -46,7 +46,7 @@ if __name__ == "__main__":
                 for i, provider in enumerate(providers):
                     host, port = provider
                     print(f"  {i + 1}: {host} {port}")
-            except DiscoveryError as error:
+            except DiscoveryError:
                 print(f"found no providers for service {service}")
     else:
         print(f"found no services")
