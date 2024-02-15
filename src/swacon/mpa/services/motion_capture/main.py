@@ -1,20 +1,17 @@
-import sys
 import socket
 import logging
 from copy import deepcopy
-from pathlib import Path
 from argparse import ArgumentParser
 
 from rpyc import Service, ThreadedServer
 from rpyc.utils.registry import TCPRegistryClient
 
-# Add top level modules to PYTHONPATH
-sys.path.append(str(Path(".").absolute()))
-from drone_position import DronePosition
-from constants import DRONE_NAME_TO_URI
-import services.common.service_configuration
+import swacon.mpa.services.common.service_configuration  # noqa: F401
+from swacon.mpa.constants import DRONE_NAME_TO_URI
 
-from worker import DRONE_STATES, DRONE_STATES_LOCK, MotionCaptureWorker
+# TODO: use path.global_var format
+from swacon.mpa.services.motion_capture.worker import MotionCaptureWorker, DRONE_STATES, DRONE_STATES_LOCK
+from swacon.data_structures.drone.state import DroneState
 
 
 class MotionCaptureService(Service):
@@ -33,7 +30,7 @@ class MotionCaptureService(Service):
         if self.fake:
             positions = dict()
             for name in DRONE_NAME_TO_URI.keys():
-                positions[name] = DronePosition(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
+                positions[name] = DroneState(0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0, 0.0)
             return positions
         else:
             with DRONE_STATES_LOCK:
