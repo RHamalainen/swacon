@@ -1,21 +1,17 @@
-import sys
-from pathlib import Path
-from threading import Lock, Thread
-from typing import Dict
 import time
 import logging
+from typing import Dict
+from threading import Lock, Thread
 
 from motioncapture import connect
 from scipy.spatial.transform import Rotation
 
-# Add top level modules to PYTHONPATH
-sys.path.append(str(Path(".").absolute()))
-from drone_position import DronePosition
-from constants import VICON_IP, DRONE_NAME_TO_URI
+from swacon.mpa.constants import VICON_IP, DRONE_NAME_TO_URI
+from swacon.data_structures.drone.state import DroneState
 
 # Used to share results with main thread
 DRONE_STATES_LOCK = Lock()
-DRONE_STATES: Dict[str, DronePosition] = dict()
+DRONE_STATES: Dict[str, DroneState] = dict()
 
 
 class MotionCaptureWorker(Thread):
@@ -55,7 +51,7 @@ class MotionCaptureWorker(Thread):
                     r = r.as_euler("zxy", degrees=True)
                     angle = r[0]
 
-                    p = DronePosition(x, y, z, qx, qy, qz, qw, angle)
+                    p = DroneState(x, y, z, qx, qy, qz, qw, angle)
                     with DRONE_STATES_LOCK:
                         DRONE_STATES[name] = p
             with DRONE_STATES_LOCK:
