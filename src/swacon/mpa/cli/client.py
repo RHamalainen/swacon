@@ -1,10 +1,11 @@
 from logging import getLogger, DEBUG as LOGGING_LEVEL_DEBUG
 
+from rpyc import Connection
 from rpyc.utils.factory import discover, DiscoveryError, connect
 from rpyc.utils.registry import TCPRegistryClient
-from rpyc import Connection
 
-from command import CommandReset, CommandTakeoff, CommandLand
+from swacon.data_structures.drone.command import CommandReset
+
 
 if __name__ == "__main__":
     logger = getLogger("main_logger")
