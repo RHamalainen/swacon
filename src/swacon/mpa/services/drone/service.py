@@ -3,12 +3,11 @@ import sys
 import time
 import signal
 import traceback
-from pathlib import Path
+from queue import Queue
 from typing import Dict, Optional, Any
+from pathlib import Path
 from logging import getLogger, DEBUG as LOGGING_LEVEL_DEBUG
 from threading import Thread, Event
-from queue import Queue
-from enum import Enum, auto, unique
 
 import rpyc
 from rpyc import Service, ThreadedServer, Connection, discover, connect
@@ -21,24 +20,14 @@ from cflib.crazyflie.log import LogConfig
 from cflib.crazyflie.syncLogger import SyncLogger
 from shapely import Point
 
-# Add top level modules to PYTHONPATH
-sys.path.append(str(Path(".").absolute()))
-import mocap_wrapper_wrapper as mww
-from constants import DRONE_NAME_TO_URI, LABORATORY_RECTANGLE
-from command import Command, CommandLand, CommandTurn, CommandTakeoff, CommandPositionSetpoint, CommandQuit, CommandReset, CommandState, TurnDirection, PositionSetpointType
-from drone_position import DronePosition
-import services.common.service_configuration
+import swacon.mpa.services.common.service_configuration  # noqa: F401
+from swacon.mpa.constants import LABORATORY_PHYSICAL_RECTANGLE
+from swacon.data_structures.drone.state import DroneState
+from swacon.data_structures.drone.dynamic_state import DroneDynamicState
+from swacon.data_structures.drone.command import Command, CommandLand, CommandPositionSetpoint, CommandQuit, CommandReset, CommandState, CommandTakeoff, CommandTurn, PositionSetpointType
+
 
 # FIXME: all drone services share the same aliases, how to distinguish e.g. drone cf1 from cf2?
-
-
-@unique
-class DroneState(Enum):
-    LANDED = auto()
-    TAKING_OFF = auto()
-    HOVERING = auto()
-    LANDING = auto()
-    MOVING = auto()
 
 
 CF_STATE_TO_STRING = {
@@ -307,13 +296,15 @@ class DroneService(Service):
             elif 1 < len(providers):
                 self.logger.error(f"found too many ({len(providers)}) for service {service}")
                 return None
+            # TODO: check is this correct
+            return None
         except DiscoveryError as error:
             self.logger.error(f"{error}")
             return None
 
     def clear_command_queue(self) -> None:
         while not self.queue.empty():
-            _command = self.queue.get()
+            _command = self.queue.get()  # noqa: F841
         self.logger.info(f"command queue cleared")
 
     def reboot_drone(self) -> None:
@@ -433,7 +424,7 @@ class DroneService(Service):
                     if timeout_seconds < duration:
                         self.logger.critical(f"failed to reset state estimator in under {timeout_seconds} seconds")
                         self.kill_service()
-        except Exception as exception:
+        except Exception:
             traceback.print_exc()
             success = False
         self.logger.debug(f"finished reset estimator loop")
@@ -461,7 +452,7 @@ class DroneService(Service):
         self.reseting = False
         self.update_state_estimate()
 
-    def get_current_position(self) -> Optional[DronePosition]:
+    def get_current_position(self) -> Optional[DroneState]:
         try:
             positions = self.mcc.root.get_positions()
             positions = rpyc.classic.obtain(positions)
@@ -473,7 +464,7 @@ class DroneService(Service):
                 if isinstance(positions, dict):
                     if self.name in positions.keys():
                         position = positions[self.name]
-                        if isinstance(position, DronePosition):
+                        if isinstance(position, DroneState):
                             return position
                         else:
                             self.logger.warning(f"received {type(position)}, expected DronePosition")
@@ -484,7 +475,7 @@ class DroneService(Service):
                 else:
                     self.logger.warning(f"received {type(position)}, expected dictionary")
                     return None
-        except EOFError as error:
+        except EOFError:
             self.logger.warning(f"lost connection to motion capture service")
             return None
 
@@ -521,17 +512,17 @@ class DroneService(Service):
     def update_thread(self) -> None:
         try:
             self.update_thread_logic()
-        except Exception as exception:
+        except Exception:
             traceback.print_exc()
         finally:
             self.handle_update_finished.set()
             self.logger.info(f"update loop finished")
 
-    def control_thread_logic(self) -> None:
+    def control_thread_logic(self) -> None:  # noqa: C901
         do_continue = True
         do_reset = True
         # TODO: solve if we are actually landed currently
-        state = DroneState.LANDED
+        state = DroneDynamicState.LANDED
         self.logger.info(f"control loop starts")
 
         setpoint_x = None
@@ -608,22 +599,22 @@ class DroneService(Service):
                         self.disconnect_from_drone()
                         self.reset_drone()
                 if isinstance(command, CommandTakeoff):
-                    state = DroneState.TAKING_OFF
+                    state = DroneDynamicState.TAKING_OFF
                     setpoint_z = self.takeoff_z
                     self.logger.info(f"drone {self.name} taking off with setpoint z={setpoint_z}")
                 if isinstance(command, CommandLand):
-                    state = DroneState.LANDING
+                    state = DroneDynamicState.LANDING
                     setpoint_z = self.landing_z
                 if isinstance(command, CommandPositionSetpoint):
                     if position is None:
                         pass
                     else:
-                        if state == DroneState.HOVERING:
+                        if state == DroneDynamicState.HOVERING:
                             match command.setpoint_type:
                                 case PositionSetpointType.ABSOLUTE:
                                     # TODO: validate also z
                                     target_point = Point(command.x, command.y)
-                                    if LABORATORY_RECTANGLE.contains(target_point):
+                                    if LABORATORY_PHYSICAL_RECTANGLE.contains(target_point):
                                         setpoint_x = command.x
                                         setpoint_y = command.y
                                         if command.z is None:
@@ -644,7 +635,7 @@ class DroneService(Service):
                                         setpoint_z = position.z + command.z
                                     # TODO: validate also z
                                     target_point = Point(setpoint_x, setpoint_y)
-                                    if LABORATORY_RECTANGLE.contains(target_point):
+                                    if LABORATORY_PHYSICAL_RECTANGLE.contains(target_point):
                                         pass
                                     else:
                                         print(f"drone {self.name} target position {target_point} outside limits")
@@ -659,7 +650,7 @@ class DroneService(Service):
                     else:
                         print(f"drone {self.name} is in state {state} at ({position.x}, {position.y}, {position.z}, {position.angle}) with setpoint ({setpoint_x}, {setpoint_y}, {setpoint_z})")
                 if isinstance(command, CommandTurn):
-                    if state == DroneState.HOVERING:
+                    if state == DroneDynamicState.HOVERING:
                         # setpoint_yaw = command.angle
                         print(f"drone {self.name} does not yet support this command")
                     else:
@@ -781,7 +772,7 @@ class DroneService(Service):
     def control_thread(self) -> None:
         try:
             self.control_thread_logic()
-        except Exception as exception:
+        except Exception:
             traceback.print_exc()
         finally:
             self.handle_control_finished.set()
@@ -826,7 +817,7 @@ class DroneService(Service):
     def monitor_thread(self) -> None:
         try:
             self.monitor_thread_logic()
-        except Exception as exception:
+        except Exception:
             traceback.print_exc()
         finally:
             self.logger.info(f"monitor loop finished")
