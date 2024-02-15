@@ -1,4 +1,4 @@
-import rpyc
+# import rpyc
 from rpyc.utils.factory import discover, DiscoveryError, connect
 from rpyc.utils.registry import TCPRegistryClient
 
@@ -33,7 +33,7 @@ if __name__ == "__main__":
             #    z = round(position.z, 4)
             #    angle = round(position.angle, 4)
             #    print(f"  {i + 1}: {name} {x} {y} {z} {angle}")
-        except ConnectionRefusedError as error:
+        except ConnectionRefusedError:
             print(f"{service} refused connection")
-    except DiscoveryError as error:
+    except DiscoveryError:
         print(f"found no providers for service {service}")
