@@ -25,7 +25,7 @@ class DroneState:
         # Angle in degrees
         self.angle = angle
 
-    def __eq__(self, other: Any) -> bool:
+    def __eq__(self, other: Any) -> bool:  # noqa: C901
         if not isinstance(other, DroneState):
             return False
         if self.x != other.x:
